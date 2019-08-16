@@ -39,6 +39,9 @@
 
 #include "supervisor/usb.h"
 
+#define BLE_GAP_CONN_TAG             1
+#define BLE_GAP_MAX_MTU              247
+
 STATIC void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info) {
     mp_raise_msg_varg(&mp_type_AssertionError,
                       translate("Soft device assert, id: 0x%08lX, pc: 0x%08lX"), id, pc);
@@ -85,6 +88,14 @@ STATIC uint32_t ble_stack_enable(void) {
     err_code = sd_ble_cfg_set(BLE_CONN_CFG_GATTS, &ble_conf, app_ram_start);
     if (err_code != NRF_SUCCESS)
         return err_code;
+
+    // Configure max MTU
+    memset(&ble_conf, 0, sizeof(ble_conf));
+    ble_conf.conn_cfg.conn_cfg_tag = BLE_GAP_CONN_TAG;
+    ble_conf.conn_cfg.params.gatt_conn_cfg.att_mtu = BLE_GAP_MAX_MTU;
+    err_code = sd_ble_cfg_set(BLE_CONN_CFG_GATT, &ble_conf, app_ram_start);
+    if (err_code != NRF_SUCCESS)
+        return err_code;        
 
     err_code = sd_ble_enable(&app_ram_start);
 
